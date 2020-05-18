@@ -10,7 +10,7 @@ int algorithmMenu() {
         << "1) Pól potencjałów\n"
         << "2) Monte Carlo\n"
         << "3) Funkcje Liapunowa\n"
-        << "4) Zmianę szybkości\n"
+        << "4) Podejście od strony szybkości\n"
         << "Wybór: ";
     std::cin >> select;
     return select;
@@ -51,10 +51,7 @@ int main()
             monteCarlo(friendlyDrone, foeDrone, heading);
         }
         break;
-    case 3:
-        //lyapunov(friendlyDrone, foeDrone);
-        break;
-    case 4:
+    case 3: {
         friendlyDrone[1] = -15;
         friendlyDrone[2] = 10.0;
         int heading = 180;
@@ -63,7 +60,18 @@ int main()
         foeDrone[0] = -15 * sinus;
         foeDrone[1] = -15 * cosinus;
         foeDrone[2] = 10.0;
-        speedApproach(friendlyDrone, foeDrone, heading);
+        lyapunov(friendlyDrone, foeDrone, heading);}
+        break;
+    case 4: {
+        friendlyDrone[1] = -15;
+        friendlyDrone[2] = 10.0;
+        int heading = 180;
+        sinus = sin((double)heading / 360 * 2 * M_PI);
+        cosinus = cos((double)heading / 360 * 2 * M_PI);
+        foeDrone[0] = -15 * sinus;
+        foeDrone[1] = -15 * cosinus;
+        foeDrone[2] = 10.0;
+        speedApproach(friendlyDrone, foeDrone, heading);}
         break;
     }
     /*while(1) {

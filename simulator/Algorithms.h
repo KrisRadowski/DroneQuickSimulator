@@ -137,10 +137,17 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 };
 
 int lyapunov(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
-	double_vector_t target;
+	double_vector_t target, distanceVector;
 	target.push_back(0.0);
 	target.push_back(15.0);
 	target.push_back(0.0);
+	while (drone1[1] <= target[1]) {
+		//cout << computeDistance(drone1, drone2) << endl;
+		step(drone1, 5, 0);
+		step(drone2, 5, foeHeading);
+		distanceVector = computeVector(drone1, drone2);
+	}
+	cout << "work in progress..." << endl;
 	return 0;
 };
 
@@ -190,59 +197,6 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 		step(drone2, 5.0, foeHeading);
 		cout << drone1[1] << endl;
 	}
-
-	/*double_vector_t center(3);
-	center = {0.0,0.0,0.0};
-	double startHeading =0, currentHeading = startHeading, currentSpeed = 5, foeSpeed =5;
-	double_vector_t collisionPoint1(3);
-	collisionPoint1.[];
-	//while (drone1[1] <= target[1]) {
-		double_vector_t ghost1 = drone1, ghost2 = drone2;
-		double distanceGhost1ToCollisionPoint, distanceGhost2ToCollisionPoint;
-		do {
-			step(ghost1, 5.0, currentHeading);
-			step(ghost2, 5.0, foeHeading);
-			distanceGhost1ToCollisionPoint = computeDistance(ghost1, center);
-			distanceGhost2ToCollisionPoint = computeDistance(ghost2, center);
-			//collisionPoint1 = ghost1;
-		} while (sqrt(pow(distanceGhost1ToCollisionPoint,2)+pow(distanceGhost2ToCollisionPoint,2)-
-			2*distanceGhost1ToCollisionPoint*distanceGhost2ToCollisionPoint*cos(foeHeading/360*2*M_PI))>1);
-		/*double_vector_t distanceToTargetVector = computeVector(drone1, target);
-		if (computeDistance(drone1, drone2) <= 10) {
-			double L_fr = computeDistance(drone1, center)/2;
-			double L_sr = computeDistance(drone2, center)/2;
-			double convergenceAngle;
-			if (foeHeading - currentHeading < -180)
-				convergenceAngle = abs(180 + (foeHeading - currentHeading));
-			else if (foeHeading - currentHeading <= 0)
-				convergenceAngle = abs(foeHeading - currentHeading);
-			else if (foeHeading - currentHeading <= 180)
-				convergenceAngle = foeHeading - currentHeading;
-			else convergenceAngle = 180 - (foeHeading - currentHeading);
-			double aux_a = pow(L_sr, 2) * (1 - pow(cos(convergenceAngle / 360 * 2 * M_PI), 2)) - 1;
-			double aux_b = 2 * (cos(convergenceAngle / 360 * 2 * M_PI) - L_sr * L_fr * (1 - pow(cos(convergenceAngle / 360 * 2 * M_PI), 2)));
-			double aux_c = pow(L_fr, 2) * (1 - pow(cos(convergenceAngle / 360 * 2 * M_PI), 2)) - 1;
-			double v_rel_min = (-aux_b + sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
-			double v_rel_max = (-aux_b - sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
-			if (v_rel_min > currentSpeed / foeSpeed || v_rel_max < currentSpeed / foeSpeed) {
-				double distanceToCollisionPoint = computeDistance(drone1, collisionPoint);
-				double foeStepLength = 0.04 * foeSpeed;
-				double cosinus = cos(convergenceAngle / 360 * 2 * M_PI);
-				double cos_a_prim = (foeStepLength + distanceToCollisionPoint * cosinus)
-					/ sqrt(pow(distanceToCollisionPoint, 2) + pow(foeStepLength, 2)
-						+ 2 * foeStepLength * distanceToCollisionPoint * cosinus);
-				double recomenndedHeading = acos(cos_a_prim)/M_PI*180;
-				if (currentHeading <= recomenndedHeading) {
-					currentHeading += 7.2;
-				}
-			} else if (currentHeading > startHeading)
-				currentHeading -= 7.2;
-		}
-		step(drone1, currentSpeed, currentHeading);
-		step(drone2, foeSpeed, foeHeading);
-		cout << currentHeading << endl;
-	}
-	cout << ghost1[0] << "\t" << ghost1[1] << endl;*/
 	return 0;
 };
 
