@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 
+#include <iostream>
 #include <random>
 #include <string>
 #include <fstream>
@@ -136,20 +137,41 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 	return 0;
 };
 
-int lyapunov(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
+/*int lyapunov(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
 	double_vector_t target, distanceVector;
 	target.push_back(0.0);
 	target.push_back(15.0);
 	target.push_back(0.0);
 	while (drone1[1] <= target[1]) {
+		double distance = computeDistance(drone1, drone2);
+		if (distance<=10) {
+			double x, x2, y, y2;
+			if (drone2[0] == drone1[0]) {
+				y = (pow(distance, 2) - 2 + pow(drone2[1], 2) - pow(drone1[1], 2)) / (2 * (drone2[1] - drone1[1]));
+				x = sqrt(1 - pow((y - drone2[1]), 2)) + drone1[0];
+				x2 = -1 * sqrt(1 - pow((y - drone2[1]), 2)) + drone1[0];
+				cout << x << "," << y << "\t" << x2 << "," << y << endl;
+			}
+			else if (drone2[1] == drone1[1]) {
+				x = (pow(distance, 2) - 2 + pow(drone2[0], 2) - pow(drone1[0], 2)) / (2 * (drone2[0] - drone1[0]));
+				y = sqrt(1 - pow((y - drone2[0]), 2)) + drone1[1];
+				y2 = sqrt(1 - pow((y - drone2[0]), 2)) + drone1[1];
+				cout << x << "," << y << "\t" << x << "," << y2 << endl;
+			}
+			else {
+				
+			}
+			//double x = ((2+pow(drone2[0],2)-pow(drone1[0],2)-pow(distance,2))/2) / (drone2[0]-drone1[0]);
+			//cout << pow(drone2[0],2) << endl;
+		}
 		//cout << computeDistance(drone1, drone2) << endl;
 		step(drone1, 5, 0);
 		step(drone2, 5, foeHeading);
 		distanceVector = computeVector(drone1, drone2);
 	}
-	cout << "work in progress..." << endl;
+	//cout << "work in progress..." << endl;
 	return 0;
-};
+};*/
 
 int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
 	//double distance = computeDistance(drone1, drone2);
@@ -163,11 +185,14 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 		if (computeDistance(drone1, drone2) <= 10) {
 			// wyliczanie punktów kolizji
 			double_vector_t ghost1 = drone1, ghost2 = drone2;
-			do {
-				step(ghost1, 5.0, currentHeading);
-				step(ghost2, 5.0, foeHeading);
-			} while (computeDistance(ghost1, ghost2) > 1 ||
-				collisionUnavoidable(ghost1, ghost2, 5, 5, currentHeading, foeHeading));
+			// fixme: po jakimœ czasie wyliczanie kolizji siê wypieprza
+			bool incomingCollision = collisionUnavoidable(ghost1, ghost2, 5, 5, currentHeading, foeHeading);
+			if (incomingCollision) {
+				while (computeDistance(ghost1, ghost2) > 1) {
+					step(ghost1, 5.0, currentHeading);
+					step(ghost2, 5.0, foeHeading);
+				};
+			}
 			double distanceToCollisionPoint1 = computeDistance(drone1, ghost1), distanceToCollisionPoint2 = computeDistance(drone2, ghost2);
 			double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
 			double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
@@ -195,7 +220,7 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 			currentHeading += 7.2;
 		step(drone1, 5.0, currentHeading);
 		step(drone2, 5.0, foeHeading);
-		cout << drone1[1] << endl;
+		cout << drone1[0] << "\t" << drone1[1] << "\t" << drone1[2] << endl;
 	}
 	return 0;
 };
@@ -214,8 +239,12 @@ vector<double> computeVector(vector<double>& point1, vector<double>& point2) {
 }
 
 int step(vector<double>& drone, double speed, double heading) {
-	drone[0] += (speed * 0.04 * sin(2 * M_PI * (heading / 360)));
-	drone[1] += (speed * 0.04 * cos(2 * M_PI * (heading / 360)));
+	if (heading == 180) {
+		drone[1] -= speed * 0.04;
+	} else {
+		drone[0] += (speed * 0.04 * sin(2 * M_PI * (heading / 360)));
+		drone[1] += (speed * 0.04 * cos(2 * M_PI * (heading / 360)));
+	}
 	return 0;
 }
 
@@ -230,7 +259,7 @@ bool collisionUnavoidable(vector<double>& point1, vector<double>& point2, double
 	double_vector_t step1 = point1, step2 = point2;
 	step(step1, v1, h1);
 	step(step2, v2, h2);
-	if (computeDistance(point1, point2) < computeDistance(step1, step2))
-		return false;
-	else return true;
+	if (computeDistance(point1, point2) >= computeDistance(step1, step2)&&abs(point1[2]-point2[2])<1)
+		return true;
+	else return false;
 }
