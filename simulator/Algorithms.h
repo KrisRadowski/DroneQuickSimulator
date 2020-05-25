@@ -13,7 +13,7 @@ typedef vector <double> double_vector_t;
 
 double computeDistance(vector<double>& point1, vector<double>& point2);
 vector<double> computeVector(vector<double>& point1, vector<double>& point2);
-bool collisionUnavoidable(vector<double>& point1, vector<double>& point2, double v1, double v2, double h1, double h2);
+bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double v1, double v2, double h1, double h2);
 int step(vector<double>& drone, double speed, double heading);
 int step(vector<double>& drone, double speed, vector<double>& forcesVector);
 
@@ -174,54 +174,75 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 };*/
 
 int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
-	//double distance = computeDistance(drone1, drone2);
+	bool failure = false;
 	double_vector_t target, trajectoriesCrossing(3);
 	target.push_back(0.0);
 	target.push_back(15.0);
 	target.push_back(0.0);
-	double startHeading = 0, currentHeading = startHeading;
+	double startHeading = 0, currentHeading = startHeading, startAltitude = drone1[2];
+	double distanceToFoe = computeDistance(drone1, drone2);
 	while (drone1[1] <= target[1]) {
 		bool goDown = false, goRight = false;
 		if (computeDistance(drone1, drone2) <= 10) {
 			// wyliczanie punktów kolizji
 			double_vector_t ghost1 = drone1, ghost2 = drone2;
-			// fixme: po jakimœ czasie wyliczanie kolizji siê wypieprza
-			bool incomingCollision = collisionUnavoidable(ghost1, ghost2, 5, 5, currentHeading, foeHeading);
+			bool incomingCollision = onCollisionCourse(ghost1, ghost2, 5, 5, currentHeading, foeHeading);
+			bool collisionAvoided = !incomingCollision;
 			if (incomingCollision) {
 				while (computeDistance(ghost1, ghost2) > 1) {
+					if (!onCollisionCourse(ghost1, ghost2, 5, 5, currentHeading, foeHeading)) {
+						collisionAvoided = true;
+						break;
+					}
 					step(ghost1, 5.0, currentHeading);
-					step(ghost2, 5.0, foeHeading);
+					step(ghost2, 5.0, foeHeading);	
 				};
+				if (!collisionAvoided) {
+					double distanceToCollisionPoint1 = computeDistance(drone1, ghost1), distanceToCollisionPoint2 = computeDistance(drone2, ghost2);
+					double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
+					double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
+					double relativeSpeed = 5 / 5;
+
+					//wyliczanie zmiennych pomocniczych
+					double headingCos = cos(((foeHeading - currentHeading) / 180) * M_PI);
+					double aux_a = pow(relativeDistanceToCollisionPoint2, 2) * (1 - pow(headingCos, 2)) - 1;
+					double aux_b = 2 * (headingCos - relativeDistanceToCollisionPoint1 * relativeDistanceToCollisionPoint2 * (1 - pow(headingCos, 2)));
+					double aux_c = pow(relativeDistanceToCollisionPoint1, 2) * (1 - pow(headingCos, 2)) - 1;
+
+					//wyznaczanie prêdkoœci granicznych
+					double minimumRelativeSpeed = (-aux_b + sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
+					double maximumRelativeSpeed = (-aux_b - sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
+
+					//wyznaczanie zalecanego kursu
+					double stepOfFoeDrone = 0.04 * 5;
+					double newDistance = sqrt(pow(distanceToCollisionPoint1, 2) + pow(stepOfFoeDrone, 2)
+						+ 2 * stepOfFoeDrone * distanceToCollisionPoint1 * headingCos);
+					double recommendedHeading = acos((stepOfFoeDrone + distanceToCollisionPoint1 * headingCos) / newDistance) / M_PI * 180;
+					if (recommendedHeading == currentHeading || isnan(recommendedHeading))
+						goDown = true;
+					else goRight = true;
+				}
 			}
-			double distanceToCollisionPoint1 = computeDistance(drone1, ghost1), distanceToCollisionPoint2 = computeDistance(drone2, ghost2);
-			double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
-			double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
-			double relativeSpeed = 5 / 5;
-			//wyliczanie zmiennych pomocniczych
-			double headingCos = cos((foeHeading - currentHeading / 180) * M_PI);
-			double aux_a = pow(relativeDistanceToCollisionPoint2, 2) * (1 - pow(headingCos, 2)) - 1;
-			double aux_b = 2 * (headingCos - relativeDistanceToCollisionPoint1 * relativeDistanceToCollisionPoint2 * (1 - pow(headingCos, 2)));
-			double aux_c = pow(relativeDistanceToCollisionPoint1, 2) * (1 - pow(headingCos, 2)) - 1;
-			//wyznaczanie prêdkoœci granicznych
-			double minimumRelativeSpeed = (-aux_b + sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
-			double maximumRelativeSpeed = (-aux_b - sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
-			//wyznaczanie zalecanego kursu
-			double stepOfFoeDrone = 0.04 * 5;
-			double newDistance = sqrt(pow(distanceToCollisionPoint1, 2) + pow(stepOfFoeDrone, 2)
-				+ 2 * stepOfFoeDrone * distanceToCollisionPoint1 * headingCos);
-			double recommendedHeading = acos((stepOfFoeDrone + distanceToCollisionPoint1 * headingCos) / newDistance) / M_PI * 180;
-			if (recommendedHeading == currentHeading || isnan(recommendedHeading))
-				goDown = true;
-			else goRight = true;
 		}
+		bool inDanger = onCollisionCourse(drone1, drone2, 5, 5, currentHeading, foeHeading);
+
 		if (goDown == true)
 			drone1[2] -= 0.08;
 		else if (goRight == true)
 			currentHeading += 7.2;
+		if(inDanger)
 		step(drone1, 5.0, currentHeading);
+		else {
+			double_vector_t targetVector = computeVector(drone1, target);
+			step(drone1, 5.0, targetVector);
+		}
 		step(drone2, 5.0, foeHeading);
-		cout << drone1[0] << "\t" << drone1[1] << "\t" << drone1[2] << endl;
+		if (distanceToFoe <= 1) {
+			failure = true;
+		}
 	}
+	if (failure) cout << "FAIL" << endl;
+	else cout << "PASS" << endl;
 	return 0;
 };
 
@@ -255,7 +276,7 @@ int step(vector<double>& drone, double speed, vector<double>& forcesVector) {
 	return 0;
 }
 
-bool collisionUnavoidable(vector<double>& point1, vector<double>& point2, double v1, double v2, double h1, double h2) {
+bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double v1, double v2, double h1, double h2) {
 	double_vector_t step1 = point1, step2 = point2;
 	step(step1, v1, h1);
 	step(step2, v2, h2);

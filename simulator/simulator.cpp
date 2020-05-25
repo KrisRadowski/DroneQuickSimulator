@@ -22,7 +22,7 @@ int main()
     int algorithm = 0;
     do {
         algorithm = algorithmMenu();
-    } while (algorithm != 1 && algorithm != 2 && algorithm != 3 && algorithm != 4);
+    } while (algorithm != 1 && algorithm != 2 && algorithm != 3);
     switch (algorithm) {
     case 1:
         for (int heading = 90;heading <= 270;heading++) {
@@ -78,34 +78,32 @@ int main()
             monteCarlo(friendlyDrone, foeDrone, heading);
         }
         break;
-    case 3: {
-        friendlyDrone[1] = -15;
-        friendlyDrone[2] = 10.0;
-        int heading = 180;
-        if (heading == 90) {
-            sinus = 1;
-            cosinus = 0;
+    case 3:
+        for (int heading = 90;heading <= 270;heading++) {
+            friendlyDrone[1] = -15;
+            friendlyDrone[2] = 10.0;
+            if (heading == 90) {
+                sinus = 1;
+                cosinus = 0;
+            }
+            else if (heading == 180) {
+                sinus = 0;
+                cosinus = -1;
+            }
+            else if (heading == 270) {
+                sinus = -1;
+                cosinus = 0;
+            }
+            else {
+                sinus = sin((double)heading / 360 * 2 * M_PI);
+                cosinus = cos((double)heading / 360 * 2 * M_PI);
+            }
+            foeDrone[0] = -15 * sinus;
+            foeDrone[1] = -15 * cosinus;
+            foeDrone[2] = 10.0;
+            cout << heading << ": ";
+            speedApproach(friendlyDrone, foeDrone, heading);
         }
-        else if (heading == 180) {
-            sinus = 0;
-            cosinus = -1;
-        }
-        else if (heading == 270) {
-            sinus = -1;
-            cosinus = 0;
-        }
-        else {
-            sinus = sin((double)heading / 360 * 2 * M_PI);
-            cosinus = cos((double)heading / 360 * 2 * M_PI);
-        }
-        foeDrone[0] = -15 * sinus;
-        foeDrone[1] = -15 * cosinus;
-        foeDrone[2] = 10.0;
-        speedApproach(friendlyDrone, foeDrone, heading);}
         break;
     }
-    /*while(1) {
-        friendlyDrone[1] += 0.01;
-        std::cout << friendlyDrone[0] << "\t" << friendlyDrone[1] << "\t" << friendlyDrone[2] << "\n";
-    }*/
 }
