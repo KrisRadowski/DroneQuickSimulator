@@ -347,22 +347,41 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 };
 
 int speedApproach(vector<double>& drone, vector<vector<double>>& obstacles) {
-	bool failure = false;
 	double_vector_t target, trajectoriesCrossing(3);
 	target.push_back(0.0);
 	target.push_back(15.0);
 	target.push_back(10.0);
-	double startHeading = 0, currentHeading = startHeading, currentSpeed =5;
-	/*double distanceToFoe = computeDistance(drone1, drone2);
-	while (drone1[1] <= target[1]) {
+	double startHeading = 0, currentHeading = startHeading, currentSpeed = 5;
+	//double distanceToFoe = computeDistance(drone1, drone2);
+	while (drone[1] <= target[1]) {
 		bool slowDown = false, goRight = false;
 		// wyliczanie punktów kolizji
-		double_vector_t ghost1 = drone1, ghost2 = drone2;
-		bool incomingCollision = onCollisionCourse(ghost1, ghost2, 5, 5, currentHeading, foeHeading);
-		bool collisionAvoided = !incomingCollision;
+		double_vector_t ghost1 = drone;
+		for (auto obstacle : obstacles) {
+			auto test = obstacle;
+			bool incomingCollision = onCollisionCourse(ghost1, test, 5, 0, currentHeading, 0);
+			bool collisionAvoided = !incomingCollision;
+			if (incomingCollision) {
+				while (computeDistance(ghost1, test) > 1) {
+					if (!onCollisionCourse(ghost1, test, 5, 0, currentHeading, 0)) {
+						collisionAvoided = true;
+						break;
+					}
+					step(ghost1, 5.0, currentHeading);
+					step(test, 0, 0);
+				};
+				if (!collisionAvoided) {
+					double distanceToCollisionPoint1 = computeDistance(drone, ghost1), distanceToCollisionPoint2 = computeDistance(obstacle, test);
+					double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
+					double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
+					double relativeSpeed = 5 / 5;
+				}
+			}
+		};
+		/*bool incomingCollision = onCollisionCourse(ghost1, ghost2, 5, 0, currentHeading, 0);
 		if (incomingCollision) {
 			while (computeDistance(ghost1, ghost2) > 1) {
-				if (!onCollisionCourse(ghost1, ghost2, 5, 5, currentHeading, foeHeading)) {
+				if (!onCollisionCourse(ghost1, ghost2, 5, 0, currentHeading, 0)) {
 					collisionAvoided = true;
 					break;
 				}
@@ -412,9 +431,9 @@ int speedApproach(vector<double>& drone, vector<vector<double>>& obstacles) {
 			failure = true;
 			break;
 		}
+	}*/
+		step(drone, 5.0, currentHeading);
 	}
-	if (failure) cout << "FAIL " << endl;
-	else cout << "PASS " << endl;*/
 	return 0;
 }
 
