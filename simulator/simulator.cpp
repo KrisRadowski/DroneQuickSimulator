@@ -43,6 +43,7 @@ int main()
         switch (test) {
         case 1:
             for (int heading = 90;heading <= 270;heading++) {
+                friendlyDrone[0] = 0;
                 friendlyDrone[1] = -15.0;
                 friendlyDrone[2] = 10.0;
                 if (heading == 90) {
@@ -72,6 +73,7 @@ int main()
             default_random_engine generator;
             uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
             for (int amount = 1;amount <= 100;amount++) {
+                friendlyDrone[0] = 0;
                 friendlyDrone[1] = -50.0;
                 friendlyDrone[2] = 10.0;
                 vector_vector_t obstacles(amount);
@@ -97,6 +99,7 @@ int main()
         switch (test) {
         case 1:
             for (int heading = 90;heading <= 270;heading++) {
+                friendlyDrone[0] = 0;
                 friendlyDrone[1] = -15.0;
                 friendlyDrone[2] = 10.0;
                 if (heading == 90) {
@@ -126,6 +129,7 @@ int main()
             default_random_engine generator;
             uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
             for (int amount = 1;amount <= 100;amount++) {
+                friendlyDrone[0] = 0;
                 friendlyDrone[1] = -50.0;
                 friendlyDrone[2] = 10.0;
                 vector_vector_t obstacles(amount);
@@ -145,6 +149,7 @@ int main()
         break;
     case 3:
         for (int heading = 90;heading <= 270;heading++) {
+            friendlyDrone[0] = 0;
             friendlyDrone[1] = -15;
             friendlyDrone[2] = 10.0;
             if (heading == 90) {
