@@ -278,19 +278,14 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 	bool failure = false;
 	double_vector_t target, trajectoriesCrossing(3);
 	target.push_back(0.0);
-	target.push_back(15.0);
+	target.push_back(50.0);
 	target.push_back(10.0);
-	trajectoriesCrossing[0] = 0;
-	trajectoriesCrossing[1] = 0;
-	trajectoriesCrossing[2] = 10;
 	double startHeading = 0, currentHeading = startHeading, startAltitude = drone1[2], currentSpeed=5;
 	while (drone1[1] <= target[1]) {
 		bool goDown = false, goRight = false, speedUp = false, slowDown = false;
 		double distanceToFoe = computeDistance(drone1, drone2);
 		// wyliczanie punktów kolizji
-		double_vector_t ghost1 = drone1, ghost2 = drone2;
-
-		bool incomingCollision = onCollisionCourse(ghost1, ghost2, currentHeading, foeHeading);
+		bool incomingCollision = onCollisionCourse(drone1, drone2, currentHeading, foeHeading);
 		bool inDanger = false;
 		if (incomingCollision) {
 			double distanceToCollisionPoint1 = computeDistance(drone1, trajectoriesCrossing), distanceToCollisionPoint2 = computeDistance(drone2, trajectoriesCrossing);
@@ -355,57 +350,28 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 };
 
 int speedApproach(vector<double>& drone, vector<vector<double>>& obstacles) {
+	int algorithmSteps;
 	double_vector_t target, trajectoriesCrossing(3);
 	target.push_back(0.0);
-	target.push_back(15.0);
+	target.push_back(50.0);
 	target.push_back(10.0);
-	double startHeading = 0, currentHeading = startHeading, currentSpeed = 5;
-	//double distanceToFoe = computeDistance(drone1, drone2);
+	bool goRight = false, speedUp = false, slowDown = false, inDanger = false;
+	double startHeading = 0, currentHeading = startHeading, startAltitude = drone[2], currentSpeed = 5;
 	while (drone[1] <= target[1]) {
-		bool slowDown = false, goRight = false;
-		// wyliczanie punktów kolizji
-		double_vector_t ghost1 = drone;
+		algorithmSteps = 0;
 		for (auto obstacle : obstacles) {
-			auto test = obstacle;
-			bool incomingCollision = onCollisionCourse(ghost1, test, currentHeading, 0);
-			bool collisionAvoided = !incomingCollision;
+			double distanceToObstacle = computeDistance(drone, obstacle);
+			bool incomingCollision = onCollisionCourse(drone, obstacle, currentHeading, currentHeading);
+			algorithmSteps += 2;
+			inDanger = false;
 			if (incomingCollision) {
-				while (computeDistance(ghost1, test) > 1) {
-					if (!onCollisionCourse(ghost1, test, currentHeading, 0)) {
-						collisionAvoided = true;
-						break;
-					}
-					step(ghost1, 5.0, currentHeading);
-					step(test, 0, 0);
-				};
-				if (!collisionAvoided) {
-					double distanceToCollisionPoint1 = computeDistance(drone, ghost1), distanceToCollisionPoint2 = computeDistance(obstacle, test);
-					double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
-					double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
-					double relativeSpeed = INFINITY;
-
-
-				}
-			}
-		};
-		/*bool incomingCollision = onCollisionCourse(ghost1, ghost2, 5, 0, currentHeading, 0);
-		if (incomingCollision) {
-			while (computeDistance(ghost1, ghost2) > 1) {
-				if (!onCollisionCourse(ghost1, ghost2, 5, 0, currentHeading, 0)) {
-					collisionAvoided = true;
-					break;
-				}
-				step(ghost1, 5.0, currentHeading);
-				step(ghost2, 5.0, foeHeading);
-			};
-			if (!collisionAvoided) {
-				double distanceToCollisionPoint1 = computeDistance(drone1, ghost1), distanceToCollisionPoint2 = computeDistance(drone2, ghost2);
+				computeCollisionPoint(drone, obstacle, currentHeading, currentHeading, trajectoriesCrossing);
+				double distanceToCollisionPoint1 = computeDistance(drone, trajectoriesCrossing), distanceToCollisionPoint2 = computeDistance(obstacle, trajectoriesCrossing);
 				double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
 				double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
-				double relativeSpeed = 5 / 5;
-
+				double relativeSpeed = currentSpeed / 5;
 				//wyliczanie zmiennych pomocniczych
-				double headingCos = cos(((foeHeading - currentHeading) / 180) * M_PI);
+				double headingCos = 1;
 				double aux_a = pow(relativeDistanceToCollisionPoint2, 2) * (1 - pow(headingCos, 2)) - 1;
 				double aux_b = 2 * (headingCos - relativeDistanceToCollisionPoint1 * relativeDistanceToCollisionPoint2 * (1 - pow(headingCos, 2)));
 				double aux_c = pow(relativeDistanceToCollisionPoint1, 2) * (1 - pow(headingCos, 2)) - 1;
@@ -419,32 +385,36 @@ int speedApproach(vector<double>& drone, vector<vector<double>>& obstacles) {
 				double newDistance = sqrt(pow(distanceToCollisionPoint1, 2) + pow(stepOfFoeDrone, 2)
 					+ 2 * stepOfFoeDrone * distanceToCollisionPoint1 * headingCos);
 				double recommendedHeading = acos((stepOfFoeDrone + distanceToCollisionPoint1 * headingCos) / newDistance) / M_PI * 180;
-				if (recommendedHeading == currentHeading || isnan(recommendedHeading))
-					goDown = true;
-				else goRight = true;
+				goRight = true;
+				if (computeDistance(drone, obstacle) <= 10)
+					if (minimumRelativeSpeed >= relativeSpeed && relativeSpeed >= (minimumRelativeSpeed - maximumRelativeSpeed) / 2)
+						speedUp = true;
+					else if ((minimumRelativeSpeed - maximumRelativeSpeed) / 2 >= relativeSpeed && relativeSpeed >= maximumRelativeSpeed)
+						slowDown = true;
+				inDanger = ((minimumRelativeSpeed >= relativeSpeed) && (maximumRelativeSpeed <= relativeSpeed));
+				algorithmSteps += 18;
 			}
 		}
-		bool inDanger = onCollisionCourse(drone1, drone2, 5, 5, currentHeading, foeHeading);
-
-		if (goDown == true)
-			drone1[2] -= 0.08;
-		else if (goRight == true)
-			currentHeading += 7.2;
-		if (inDanger)
-			step(drone1, 5.0, currentHeading);
+		if (inDanger) {
+			if (goRight == true)
+				currentHeading += 7.2;
+			algorithmSteps++;
+			if (slowDown == true)
+				currentSpeed -= 0.1;
+			else if (speedUp == true)
+				currentSpeed += 0.1;
+			algorithmSteps++;
+			step(drone, currentSpeed, currentHeading);
+		}
 		else {
-			double_vector_t targetVector = computeVector(drone1, target);
-			step(drone1, 5.0, targetVector);
+			if (currentHeading >= 90)
+				currentHeading -= 7.2;
+			algorithmSteps++;
+			step(drone, 5.0, currentHeading);
 		}
-		step(drone2, 5.0, foeHeading);
-		if (distanceToFoe <= 1) {
-			failure = true;
-			break;
-		}
-	}*/
-		step(drone, 5.0, currentHeading);
+		cout << algorithmSteps << endl;
+		return 0;
 	}
-	return 0;
 }
 
 double computeDistance(vector<double>& point1, vector<double>& point2) {
@@ -517,7 +487,19 @@ bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double h1
 		b2 = point2[1] - a2 * point2[0];
 	else b2 = 0;
 	if (a1 == a2 || (!isfinite(a1) && !isfinite(a2))) {
-		danger = false;
+		//danger = false;
+		if (a1 == 0) {
+			if (h1 == 90 && h2 == 270 && abs(point1[1]-point2[1])<=1 && point1[0]<point2[0]
+				|| h1 == 270 && h2 == 90 && abs(point1[1] - point2[1]) <= 1 && point1[0] > point2[0])
+				danger = true;
+			else danger = false;
+		}
+		else if (!isfinite(a1)) {
+			if (h1 == 0 && h2 == 180 && abs(point1[0] - point2[0]) <= 1 && point1[1]<point2[1]
+				|| h1 == 180 && h2 == 0 && abs(point1[0] - point2[0]) <= 1 && point1[1] > point2[1])
+				danger = true;
+			else danger = false;
+		}
 	}
 	else {
 		if (isinf(a1) || isinf(a2))
