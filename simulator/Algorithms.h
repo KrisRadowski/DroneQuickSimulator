@@ -297,9 +297,12 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 			double relativeDistanceToCollisionPoint1 = distanceToCollisionPoint1 / 1;
 			double relativeDistanceToCollisionPoint2 = distanceToCollisionPoint2 / 1;
 			double relativeSpeed = currentSpeed / 5;
-
 			//wyliczanie zmiennych pomocniczych
-			double headingCos = cos(((foeHeading - currentHeading) / 180) * M_PI);
+			double headingCos;
+			if ((foeHeading - currentHeading)>180) {
+				headingCos = cos(((360-(foeHeading - currentHeading)) / 180) * M_PI);
+			}
+			else headingCos = cos(((foeHeading - currentHeading) / 180) * M_PI);
 			double aux_a = pow(relativeDistanceToCollisionPoint2, 2) * (1 - pow(headingCos, 2)) - 1;
 			double aux_b = 2 * (headingCos - relativeDistanceToCollisionPoint1 * relativeDistanceToCollisionPoint2 * (1 - pow(headingCos, 2)));
 			double aux_c = pow(relativeDistanceToCollisionPoint1, 2) * (1 - pow(headingCos, 2)) - 1;
@@ -307,8 +310,6 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 			//wyznaczanie prêdkoœci granicznych
 			double minimumRelativeSpeed = (-aux_b + sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
 			double maximumRelativeSpeed = (-aux_b - sqrt(pow(aux_b, 2) - 4 * aux_a * aux_c)) / (2 * aux_a);
-				
-			//cout << "min: "<< minimumRelativeSpeed << "\trel: "  << relativeSpeed << "\tmax: "<< maximumRelativeSpeed << endl;
 
 			//wyznaczanie zalecanego kursu
 			double stepOfFoeDrone = 0.04 * 5;
@@ -325,8 +326,6 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 					slowDown = true;
 			inDanger = ((minimumRelativeSpeed >= relativeSpeed) && (maximumRelativeSpeed <= relativeSpeed));
 		}
-		//inDanger =  onCollisionCourse(drone1, drone2, currentHeading, foeHeading);
-
 		if (inDanger) {
 			if (goDown == true)
 				drone1[2] -= 0.08;
@@ -500,7 +499,7 @@ bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double h1
 	else if (h1 == 90 || h1 == 270) {
 		a1 = 0;
 	}
-	else a1 = tan((h1 + 90) / 180 * M_PI);
+	else a1 = tan((90-h1) / 180 * M_PI);
 	if (h2 == 0) {
 		a2 = INFINITY;
 	}
@@ -510,7 +509,7 @@ bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double h1
 	else if (h2 == 90 || h2 == 270) {
 		a2 = 0;
 	}
-	else a2 = tan((h2 + 90) / 180 * M_PI);
+	else a2 = tan((90-h2) / 180 * M_PI);
 	if (a1 != INFINITY)
 		b1 = point1[1] - a1 * point1[0];
 	else b1 = 0;
@@ -526,10 +525,10 @@ bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double h1
 		else 
 		x = (b2 - b1) / (a1 - a2);
 
-		if (((x <= point1[0] && (h1 <= 90 || h1 >= 270)) && (x <= point2[0] && (h2 <= 90 || h2 >= 270)))
-			|| ((x >= point1[0] && (h1 >= 90 && h1 <= 270)) && (x <= point2[0] && (h2 <= 90 || h2 >= 270)))
-			|| ((x <= point1[0] && (h1 <= 90 || h1 >= 270)) && (x >= point2[0] && (h2 >= 90 && h2 <= 270)))
-			|| ((x >= point1[0] && (h1 >= 90 && h1 < 270)) && (x >= point2[0] && (h2 >= 90 && h2 <= 270)))) {
+		if (((x >= point1[0] && (h1 >= 0 && h1 <= 180)) && (x >= point2[0] && (h2 >= 0 && h2 <= 180)))
+			|| ((x <= point1[0] && (h1 >= 180 && h1 <= 360)) && (x >= point2[0] && (h2 >= 0 && h2 <= 180)))
+			|| ((x >= point1[0] && (h1 >= 0 && h1 <= 180)) && (x <= point2[0] && (h2 >= 180 && h2 <= 360)))
+			|| ((x <= point1[0] && (h1 >= 180 && h1 <= 360)) && (x <= point2[0] && (h2 >= 180 && h2 <= 360)))) {
 			danger = true;
 		}
 		else danger = false;
