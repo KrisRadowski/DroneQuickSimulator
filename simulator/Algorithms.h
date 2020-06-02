@@ -35,11 +35,14 @@ int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHea
 		attractiveForce[2] = (-1 * epsilon * distanceToTarget * distanceToTargetVector[2]);
 		double distanceToFoe = computeDistance(drone1, drone2);
 		distanceToFoeVector = computeVector(drone1, drone2);
-		repulsiveForce[0] = (mi * (1 / distanceToFoe - 1) * (pow(distanceToTarget, 2) / pow(distanceToFoe, 2)) * distanceToFoeVector[0] -
+		repulsiveForce[0] = (mi * (1 / distanceToFoe - 1) * (pow(distanceToTarget, 2) / 
+			pow(distanceToFoe, 2)) * distanceToFoeVector[0] -
 			mi * (1 / distanceToFoe - 1) * distanceToTarget * distanceToTargetVector[0]);
-		repulsiveForce[1] = (mi * (1 / distanceToFoe - 1) * (pow(distanceToTarget, 2) / pow(distanceToFoe, 2)) * distanceToFoeVector[1] -
+		repulsiveForce[1] = (mi * (1 / distanceToFoe - 1) * (pow(distanceToTarget, 2) / 
+			pow(distanceToFoe, 2)) * distanceToFoeVector[1] -
 			mi * (1 / distanceToFoe - 1) * distanceToTarget * distanceToTargetVector[1]);
-		repulsiveForce[2] = (mi * (1 / distanceToFoe - 1) * (pow(distanceToTarget, 2) / pow(distanceToFoe, 2)) * distanceToFoeVector[2] -
+		repulsiveForce[2] = (mi * (1 / distanceToFoe - 1) * (pow(distanceToTarget, 2) / 
+			pow(distanceToFoe, 2)) * distanceToFoeVector[2] -
 			mi * (1 / distanceToFoe - 1) * distanceToTarget * distanceToTargetVector[2]);
 		double_vector_t forcesVector(3);
 		forcesVector[0] = attractiveForce[0] + repulsiveForce[0];
@@ -118,16 +121,8 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 			ghost2[0] = x;
 			ghost2[1] = y;
 			ghost2[2] = drone2[2];
-			while (ghost1[1] <= target[1]) {
-				ghost1[0] += 0.2 * sin(2 * M_PI * (0 / 360));
-				ghost1[1] += 0.2 * cos(2 * M_PI * (0 / 360));
-				ghost2[0] += 0.04 * speed * sin(2 * M_PI * (foeHeading / 360));
-				ghost2[1] += 0.04 * speed * cos(2 * M_PI * (foeHeading / 360));
-				if (computeDistance(ghost1, ghost2) <= 1) {
-					collisions++;
-					break;
-				}
-			}
+			if (onCollisionCourse(ghost1, ghost2, currentHeading, foeHeading))
+				collisions++;
 		}
 		if (collisions < 1) {
 			currentHeading = 0;
