@@ -182,27 +182,20 @@ int monteCarlo(vector<double>& drone, vector<vector<double>>& obstacles){
 			for (auto obstacle : obstacles) {
 				double_vector_t ghostObstacle(3);
 				ghostObstacle[0] = obstacle[0] + positionDistribution(generator);
-				ghostObstacle[2] = obstacle[1] + positionDistribution(generator);
+				ghostObstacle[1] = obstacle[1] + positionDistribution(generator);
 				ghostObstacle[2] = obstacle[2];
 				ghostObstacles.push_back(ghostObstacle);
 				algorithmSteps += 3;
 			}
 			double_vector_t ghost1 = drone;
-			while (ghost1[1] <= target[1]) {
-				ghost1[0] += 0.2 * sin(2 * M_PI * (0 / 360));
-				ghost1[1] += 0.2 * cos(2 * M_PI * (0 / 360));
-				for (auto obstacle : ghostObstacles) {
-					if (computeDistance(ghost1, obstacle) <= 1)
-						collisionHappened = true;
-					algorithmSteps++;
-				}
-				if (collisionHappened) {
-					collisions++;
-					algorithmSteps++;
-					break;
-				}
+			for (auto obstacle : ghostObstacles) {
+				if (onCollisionCourse(ghost1, obstacle, currentHeading, currentHeading))
+					collisionHappened = true;
+				algorithmSteps++;
 			}
-		}
+			if (collisionHappened) 
+				collisions++;
+			}
 		if (collisions < 1) {
 			currentHeading = 0;
 			currentSpeed = 5;
@@ -227,47 +220,10 @@ int monteCarlo(vector<double>& drone, vector<vector<double>>& obstacles){
 		}
 		algorithmSteps++;
 		step(drone, currentSpeed, currentHeading);
-
 	}
 	cout << algorithmSteps << endl;
 	return 0;
 }
-
-/*int lyapunov(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
-	double_vector_t target, distanceVector;
-	target.push_back(0.0);
-	target.push_back(15.0);
-	target.push_back(0.0);
-	while (drone1[1] <= target[1]) {
-		double distance = computeDistance(drone1, drone2);
-		if (distance<=10) {
-			double x, x2, y, y2;
-			if (drone2[0] == drone1[0]) {
-				y = (pow(distance, 2) - 2 + pow(drone2[1], 2) - pow(drone1[1], 2)) / (2 * (drone2[1] - drone1[1]));
-				x = sqrt(1 - pow((y - drone2[1]), 2)) + drone1[0];
-				x2 = -1 * sqrt(1 - pow((y - drone2[1]), 2)) + drone1[0];
-				cout << x << "," << y << "\t" << x2 << "," << y << endl;
-			}
-			else if (drone2[1] == drone1[1]) {
-				x = (pow(distance, 2) - 2 + pow(drone2[0], 2) - pow(drone1[0], 2)) / (2 * (drone2[0] - drone1[0]));
-				y = sqrt(1 - pow((y - drone2[0]), 2)) + drone1[1];
-				y2 = sqrt(1 - pow((y - drone2[0]), 2)) + drone1[1];
-				cout << x << "," << y << "\t" << x << "," << y2 << endl;
-			}
-			else {
-				
-			}
-			//double x = ((2+pow(drone2[0],2)-pow(drone1[0],2)-pow(distance,2))/2) / (drone2[0]-drone1[0]);
-			//cout << pow(drone2[0],2) << endl;
-		}
-		//cout << computeDistance(drone1, drone2) << endl;
-		step(drone1, 5, 0);
-		step(drone2, 5, foeHeading);
-		distanceVector = computeVector(drone1, drone2);
-	}
-	//cout << "work in progress..." << endl;
-	return 0;
-};*/
 
 int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHeading) {
 	bool failure = false;
