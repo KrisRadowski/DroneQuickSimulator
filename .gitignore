@@ -351,3 +351,5 @@ MigrationBackup/
 /simulator/simulator.vcxproj
 /simulator/simulator.vcxproj.filters
 /simulator/simulator.sln
+
+/simulator/*.csv

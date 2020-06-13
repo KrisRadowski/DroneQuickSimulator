@@ -11,6 +11,7 @@ int testMenu() {
     std::cout << "Co przetestować?\n"
         << "1) Poprawność działania przy przeszkodzie poruszającej się\n"
         << "2) Złożoność obliczeniową\n"
+        << "3) Pokazać wykresy\n"
         << "Wybór: ";
     std::cin >> select;
     return select;
@@ -29,6 +30,8 @@ int main()
 {
     double_vector_t friendlyDrone(3);
     double_vector_t foeDrone(3);
+    default_random_engine generator;
+    uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
     double sinus, cosinus;
     int algorithm = 0;
     do {
@@ -42,7 +45,7 @@ int main()
         } while (test != 1 && test != 2);
         switch (test) {
         case 1:
-            for (int heading = 90;heading <= 270;heading++) {
+            for (int heading = 20;heading <= 340;heading++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -15.0;
                 friendlyDrone[2] = 10.0;
@@ -66,12 +69,10 @@ int main()
                 foeDrone[1] = -15 * cosinus;
                 foeDrone[2] = 10.0;
                 cout << heading << ": ";
-                potentialField(friendlyDrone, foeDrone, heading);
+                potentialField(friendlyDrone, foeDrone, heading,false);
             }
             break;
         case 2:
-            default_random_engine generator;
-            uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
             for (int amount = 1;amount <= 100;amount++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -50.0;
@@ -88,6 +89,36 @@ int main()
                 potentialField(friendlyDrone, obstacles);
             }
             break;
+        case 3:
+            int foeHeading = 0;
+            do {
+                cout << "Podaj kąt pod którym ma lecieć wrogi dron: ";
+                cin >> foeHeading;
+            } while (foeHeading >= 20 && foeHeading <= 340);
+            friendlyDrone[0] = 0;
+            friendlyDrone[1] = -15.0;
+            friendlyDrone[2] = 10.0;
+            if (foeHeading == 90) {
+                sinus = 1;
+                cosinus = 0;
+            }
+            else if (foeHeading == 180) {
+                sinus = 0;
+                cosinus = -1;
+            }
+            else if (foeHeading == 270) {
+                sinus = -1;
+                cosinus = 0;
+            }
+            else {
+                sinus = sin((double)foeHeading / 360 * 2 * M_PI);
+                cosinus = cos((double)foeHeading / 360 * 2 * M_PI);
+            }
+            foeDrone[0] = -15 * sinus;
+            foeDrone[1] = -15 * cosinus;
+            foeDrone[2] = 10.0;
+            potentialField(friendlyDrone, foeDrone, foeHeading, true);
+            break;
         }
     }
         break;
@@ -98,7 +129,7 @@ int main()
         } while (test != 1 && test != 2);
         switch (test) {
         case 1:
-            for (int heading = 90;heading <= 270;heading++) {
+            for (int heading = 20;heading <= 340;heading++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -15.0;
                 friendlyDrone[2] = 10.0;
@@ -122,7 +153,7 @@ int main()
                 foeDrone[1] = -15 * cosinus;
                 foeDrone[2] = 10.0;
                 cout << heading << ": ";
-                monteCarlo(friendlyDrone, foeDrone, heading);
+                monteCarlo(friendlyDrone, foeDrone, heading, false);
             }
             break;
         case 2:
@@ -154,7 +185,7 @@ int main()
         } while (test != 1 && test != 2);
         switch (test) {
         case 1:
-            for (int heading = 90;heading <= 270;heading++) {
+            for (int heading = 177;heading <=183;heading++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -15;
                 friendlyDrone[2] = 10.0;
@@ -178,7 +209,7 @@ int main()
                 foeDrone[1] = -15 * cosinus;
                 foeDrone[2] = 10.0;
                 cout << heading << ": ";
-                speedApproach(friendlyDrone, foeDrone, heading);
+                speedApproach(friendlyDrone, foeDrone, heading, false);
             }
             break;
         case 2:
