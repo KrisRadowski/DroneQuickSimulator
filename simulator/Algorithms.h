@@ -28,11 +28,14 @@ int step(vector<double>& drone, double speed, vector<double>& forcesVector);
 
 int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHeading, bool saveRoute) {
 	double_vector_t target, attractiveForce(3), repulsiveForce(3), distanceToTargetVector, distanceToFoeVector;
+	vector<double_vector_t> history(3);
+	history[0] = drone1;
 	bool failure = false;
 	ofstream output;
 	if (saveRoute) {
-		output.open("pf"+to_string(foeHeading)+".csv");
-		output << drone1[0]<<","<<drone1[1]<<","<<drone1[2]<< endl;
+		output.open("pf"+to_string((int)foeHeading)+".csv");
+		output << drone1[0]<<";"<<drone1[1]<<";"<<drone1[2]<<";"
+			<<drone2[0]<<";"<<drone2[1]<<";"<<drone2[2]<<endl;
 	}
 	target.push_back(0.0);
 	target.push_back(15.0);
@@ -64,9 +67,9 @@ int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHea
 		forcesVector[2] = attractiveForce[2] + repulsiveForce[2];
 		step(drone1, 5.0, forcesVector);
 		if (saveRoute) {
-			output << drone1[0] << "," << drone1[1] << "," << drone1[2] << endl;
+			output << drone1[0] << ";" << drone1[1] << ";" << drone1[2] << ";"
+				<< drone2[0] << ";" << drone2[1] << ";" << drone2[2] << endl;
 		}
-		//cout<< computeDistance(drone1, drone2) <<"\t"<<repulsiveForce[0]<<endl;
 		step(drone2, 5.0, foeHeading);
 		if (computeDistance(drone1, drone2)<=1||drone1[1]<=-15) {
 			failure = true;
@@ -82,6 +85,8 @@ int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHea
 
 int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
 	int algorithmSteps;
+	vector<double_vector_t> history(3);
+	history[0] = drone;
 	double_vector_t target;
 	target.push_back(0.0);
 	target.push_back(50.0);
@@ -117,7 +122,24 @@ int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
 		forcesVector[1] = attractiveForce[1] + repulsiveForce[1];
 		forcesVector[2] = attractiveForce[2] + repulsiveForce[2];
 		algorithmSteps += 3;
+		if (history[2].size() != 0) {
+			if (history[0][1] <= history[2][1]
+				) {
+				bool goRight = true;
+				for (auto obstacle : obstacles)
+					if (abs(obstacle[0] - drone[0]) < 1.25&&computeDistance(drone,obstacle)<2)
+						goRight = false;
+				if (goRight) 
+					forcesVector[0] += 1;
+				else 
+					forcesVector[1] -= 1;
+			}
+		}
 		step(drone, 5.0, forcesVector);
+		if (history[1].size() != 0)
+			history[2] = history[1];
+		history[1] = history[0];
+		history[0] = drone;
 	}
 	cout << algorithmSteps << endl;
 	return 0;
@@ -125,6 +147,12 @@ int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
 
 int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeading, bool saveRoute) {
 	bool failure = false;
+	ofstream output;
+	if (saveRoute) {
+		output.open("mc" + to_string((int)droneHeading) + ".csv");
+		output << drone1[0] << ";" << drone1[1] << ";" << drone1[2] << ";"
+			<< drone2[0] << ";" << drone2[1] << ";" << drone2[2] << endl;
+	}
 	default_random_engine generator;
 	normal_distribution<double> positionDistribution(0.0, 0.5);
 	normal_distribution<double> speedDistribution(0.0, 0.5);
@@ -134,6 +162,7 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 	target.push_back(15.0);
 	target.push_back(10.0);
 	double currentHeading = 0, currentSpeed = 5;
+	int criticalTicker = 0;
 	while (drone1[1] <= target[1]) {
 		double_vector_t distanceToTargetVector = computeVector(drone1, target);
 		double collisionCoeff = 0;
@@ -156,23 +185,49 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 		//timer = clock() - timer;
 		//cout << collisionCoeff << endl;
 		if (collisionCoeff < 0.05) {
-			currentHeading = 0;
+			if (drone1[0] < target[0]&&collisionCoeff==0) {
+				currentHeading = 30;
+				currentSpeed = 5;
+			}
+			else if (drone1[0] > target[0] && collisionCoeff == 0) {
+				currentHeading = 330;
+				currentSpeed = 5;
+			}
+			else {
+				currentHeading = 0;
+				currentSpeed = 5;
+			}
+			criticalTicker = 0;
 		}
 		else if (collisionCoeff < 0.2) {
 			currentHeading = 15;
+			currentSpeed = 4.5;
+			criticalTicker = 0;
 		}
 		else if (collisionCoeff < 0.4) {
 			currentHeading = 30;
+			currentSpeed = 4;
+			criticalTicker = 0;
 		}
 		else if (collisionCoeff < 0.6) {
 			currentHeading = 45;
-			currentSpeed = 2.5;
+			currentSpeed = 3;
+			criticalTicker = 0;
 		}
 		else {
 			currentHeading = 90;
-			currentSpeed = 2.5;
+			if(criticalTicker==5)
+			currentSpeed = -1;
+			else {
+				currentSpeed = 1;
+				criticalTicker++;
+			}
 		}
 		step(drone1, currentSpeed, currentHeading);
+		if (saveRoute) {
+			output << drone1[0] << ";" << drone1[1] << ";" << drone1[2] << ";"
+				<< drone2[0] << ";" << drone2[1] << ";" << drone2[2] << endl;
+		}
 		step(drone2, 5.0, droneHeading);
 		double distanceToFoe = computeDistance(drone1, drone2);
 		if (distanceToFoe <= 1) {
@@ -180,8 +235,11 @@ int monteCarlo(vector<double>& drone1, vector<double>& drone2, double droneHeadi
 			break;
 		}
 	}
-	if (failure) cout << "FAIL " << endl;
-	else cout << "PASS " << endl;
+	if (failure) {
+		cout << "FAIL " << endl;
+	} else cout << "PASS " << endl;
+	if (saveRoute)
+		output.close();
 	return 0;
 };
 
@@ -196,13 +254,14 @@ int monteCarlo(vector<double>& drone, vector<vector<double>>& obstacles){
 	target.push_back(50.0);
 	target.push_back(10.0);
 	double currentHeading = 0, currentSpeed = 5;
+	int criticalTicker = 0;
 	while (drone[1] <= target[1]) {
 		algorithmSteps = 0;
 		double_vector_t distanceToTargetVector = computeVector(drone, target);
 		algorithmSteps += 1;
 		double collisionCoeff = 0;
 		int collisions = 0;
-		for (int i = 1;i <= 50;i++) {
+		for (int i = 1;i <= 5000;i++) {
 			bool collisionHappened = false;
 			vector<double_vector_t> ghostObstacles;
 			for (auto obstacle : obstacles) {
@@ -224,26 +283,43 @@ int monteCarlo(vector<double>& drone, vector<vector<double>>& obstacles){
 			collisionCoeff = (double)(collisions / i);
 		}
 		if (collisionCoeff < 0.05) {
-			currentHeading = 0;
-			currentSpeed = 5;
+			if (drone[0] < target[0] && collisionCoeff == 0) {
+				currentHeading = 30;
+				currentSpeed = 5;
+			}
+			else if (drone[0] > target[0] && collisionCoeff == 0) {
+				currentHeading = 330;
+				currentSpeed = 5;
+			}
+			else {
+				currentHeading = 0;
+				currentSpeed = 5;
+			}
+			criticalTicker = 0;
 		}
 		else if (collisionCoeff < 0.2) {
-			currentHeading = 5;
-			currentSpeed = 4.5;
-		}
-
-		else if (collisionCoeff < 0.4) {
 			currentHeading = 15;
-			currentSpeed = 4;
+			currentSpeed = 4.5;
+			criticalTicker = 0;
 		}
-
-		else if (collisionCoeff < 0.6) {
+		else if (collisionCoeff < 0.4) {
 			currentHeading = 30;
+			currentSpeed = 4;
+			criticalTicker = 0;
+		}
+		else if (collisionCoeff < 0.6) {
+			currentHeading = 45;
 			currentSpeed = 3;
+			criticalTicker = 0;
 		}
 		else {
-			currentHeading = 45;
-			currentSpeed = 2;
+			currentHeading = 90;
+			if (criticalTicker == 5)
+				currentSpeed = -1;
+			else {
+				currentSpeed = 1;
+				criticalTicker++;
+			}
 		}
 		algorithmSteps++;
 		step(drone, currentSpeed, currentHeading);
@@ -255,8 +331,14 @@ int monteCarlo(vector<double>& drone, vector<vector<double>>& obstacles){
 int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHeading, bool saveRoute) {
 	bool failure = false;
 	double_vector_t target, trajectoriesCrossing(3);
-	ofstream output("speeds"+to_string((int)foeHeading)+".csv");
-	output.imbue(locale(output.getloc(),new przecinek<char,','>));
+	ofstream routeOutput, speedOutput;
+	if (saveRoute) {
+		routeOutput.open("sa" + to_string((int)foeHeading) + ".csv");
+		speedOutput.open("speeds" + to_string((int)foeHeading) + ".csv");
+		speedOutput.imbue(locale(routeOutput.getloc(), new przecinek<char, ','>));
+		routeOutput << drone1[0] << ";" << drone1[1] << ";" << drone1[2] << ";"
+			<< drone2[0] << ";" << drone2[1] << ";" << drone2[2] << endl;
+	}
 	target.push_back(0.0);
 	target.push_back(15.0);
 	target.push_back(10.0);
@@ -305,7 +387,8 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 					slowDown = true;
 				//if((drone1[2]-drone2[2]))
 			}
-			output << minimumRelativeSpeed << ";" << relativeSpeed << ";" << maximumRelativeSpeed << endl;
+			if(saveRoute)
+			speedOutput << minimumRelativeSpeed << ";" << relativeSpeed << ";" << maximumRelativeSpeed << endl;
 			inDanger = ((minimumRelativeSpeed >= relativeSpeed) && (maximumRelativeSpeed <= relativeSpeed));
 		}
 		if (inDanger) {
@@ -319,7 +402,7 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 				currentSpeed += 0.1;
 			step(drone1, currentSpeed, currentHeading);
 		} else {
-			if(currentHeading>=90)
+			if(currentHeading>0)
 			currentHeading -= 7.2;
 			if (currentSpeed > 5)
 				currentSpeed -= 0.1;
@@ -328,6 +411,9 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 			//double_vector_t targetVector = computeVector(drone1, target);
 			step(drone1, 5.0, currentHeading);
 		}
+		if (saveRoute)
+			routeOutput << drone1[0] << ";" << drone1[1] << ";" << drone1[2] << ";"
+			<< drone2[0] << ";" << drone2[1] << ";" << drone2[2] << endl;
 		step(drone2, foeSpeed, foeHeading);
 		distanceToFoe = computeDistance(drone1, drone2);
 		computeCollisionPoint(drone1, drone2, currentHeading, foeHeading, trajectoriesCrossing);
@@ -338,7 +424,10 @@ int speedApproach(vector<double>& drone1, vector<double>& drone2, double foeHead
 	}
 	if (failure) cout << "FAIL " << endl;
 	else cout << "PASS " << endl;
-	output.close();
+	if (saveRoute) {
+		routeOutput.close();
+		speedOutput.close();
+	}
 	return 0;
 };
 
@@ -400,7 +489,7 @@ int speedApproach(vector<double>& drone, vector<vector<double>>& obstacles) {
 			step(drone, currentSpeed, currentHeading);
 		}
 		else {
-			if (currentHeading >= 90)
+			if (currentHeading > 0)
 				currentHeading -= 7.2;
 			algorithmSteps++;
 			step(drone, 5.0, currentHeading);
@@ -445,10 +534,18 @@ int step(vector<double>& drone, double speed, double heading) {
 
 int step(vector<double>& drone, double speed, vector<double>& forcesVector) {
 	double maxV;
-	if (abs(forcesVector[0]) >= abs(forcesVector[1]) && abs(forcesVector[0]) >= abs(forcesVector[2])) 
+	if (abs(forcesVector[0]) >= abs(forcesVector[1]) && abs(forcesVector[0]) >= abs(forcesVector[2])) {
 		maxV = abs(forcesVector[0]);
-	else if (abs(forcesVector[1]) >= abs(forcesVector[0]) && abs(forcesVector[1]) >= abs(forcesVector[2])) 
+		/*if (forcesVector[0] >= 0)
+			cout << "-> ";
+		else cout << "<- ";*/
+	}
+	else if (abs(forcesVector[1]) >= abs(forcesVector[0]) && abs(forcesVector[1]) >= abs(forcesVector[2])) {
 		maxV = abs(forcesVector[1]);
+		/*if (forcesVector[1] >= 0)
+			cout << "^ ";
+		else cout << "v ";*/
+	}
 	else if (abs(forcesVector[2]) >= abs(forcesVector[0]) && abs(forcesVector[2]) >= abs(forcesVector[1]))
 		maxV = abs(forcesVector[2]);
 	drone[0] += (speed * 0.04 * (forcesVector[0] / maxV));

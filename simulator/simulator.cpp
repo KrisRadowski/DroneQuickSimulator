@@ -31,7 +31,7 @@ int main()
     double_vector_t friendlyDrone(3);
     double_vector_t foeDrone(3);
     default_random_engine generator;
-    uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
+    uniform_real_distribution<double> positionDistribution(-48, 48.0);
     double sinus, cosinus;
     int algorithm = 0;
     do {
@@ -42,7 +42,7 @@ int main()
         int test = 0;
         do {
             test = testMenu();
-        } while (test != 1 && test != 2);
+        } while (test != 1 && test != 2 && test!=3);
         switch (test) {
         case 1:
             for (int heading = 20;heading <= 340;heading++) {
@@ -94,7 +94,7 @@ int main()
             do {
                 cout << "Podaj kąt pod którym ma lecieć wrogi dron: ";
                 cin >> foeHeading;
-            } while (foeHeading >= 20 && foeHeading <= 340);
+            } while (foeHeading < 20 && foeHeading > 340);
             friendlyDrone[0] = 0;
             friendlyDrone[1] = -15.0;
             friendlyDrone[2] = 10.0;
@@ -126,7 +126,7 @@ int main()
         int test = 0;
         do {
             test = testMenu();
-        } while (test != 1 && test != 2);
+        } while (test != 1 && test != 2 && test != 3);
         switch (test) {
         case 1:
             for (int heading = 20;heading <= 340;heading++) {
@@ -157,8 +157,6 @@ int main()
             }
             break;
         case 2:
-            default_random_engine generator;
-            uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
             for (int amount = 1;amount <= 100;amount++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -50.0;
@@ -175,17 +173,51 @@ int main()
                 monteCarlo(friendlyDrone, obstacles);
             }
             break;
+        case 3:
+            int foeHeading = 0;
+            do {
+                cout << "Podaj kąt pod którym ma lecieć wrogi dron: ";
+                cin >> foeHeading;
+            } while (foeHeading < 20 && foeHeading > 340);
+            friendlyDrone[0] = 0;
+            friendlyDrone[1] = -15.0;
+            friendlyDrone[2] = 10.0;
+            if (foeHeading == 90) {
+                sinus = 1;
+                cosinus = 0;
+            }
+            else if (foeHeading == 180) {
+                sinus = 0;
+                cosinus = -1;
+            }
+            else if (foeHeading == 270) {
+                sinus = -1;
+                cosinus = 0;
+            }
+            else {
+                sinus = sin((double)foeHeading / 360 * 2 * M_PI);
+                cosinus = cos((double)foeHeading / 360 * 2 * M_PI);
+            }
+            foeDrone[0] = -15 * sinus;
+            foeDrone[1] = -15 * cosinus;
+            foeDrone[2] = 10.0;
+            monteCarlo(friendlyDrone, foeDrone, foeHeading, true);
+            break;
+        case 4:
+
+            break;
         }
     }
         break;
-    case 3:
+    case 3: {
         int test = 0;
         do {
             test = testMenu();
-        } while (test != 1 && test != 2);
+        } while (test != 1 && test != 2 && test != 3);
         switch (test) {
         case 1:
-            for (int heading = 177;heading <=183;heading++) {
+            for (int heading = 20;heading <= 340
+                ;heading++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -15;
                 friendlyDrone[2] = 10.0;
@@ -213,8 +245,6 @@ int main()
             }
             break;
         case 2:
-            default_random_engine generator;
-            uniform_real_distribution<double> positionDistribution(-50.0, 50.0);
             for (int amount = 1;amount <= 100;amount++) {
                 friendlyDrone[0] = 0;
                 friendlyDrone[1] = -50.0;
@@ -231,7 +261,38 @@ int main()
                 speedApproach(friendlyDrone, obstacles);
             }
             break;
+        case 3:
+            int foeHeading = 0;
+            do {
+                cout << "Podaj kąt pod którym ma lecieć wrogi dron: ";
+                cin >> foeHeading;
+            } while (foeHeading < 20 && foeHeading > 340);
+            friendlyDrone[0] = 0;
+            friendlyDrone[1] = -15.0;
+            friendlyDrone[2] = 10.0;
+            if (foeHeading == 90) {
+                sinus = 1;
+                cosinus = 0;
+            }
+            else if (foeHeading == 180) {
+                sinus = 0;
+                cosinus = -1;
+            }
+            else if (foeHeading == 270) {
+                sinus = -1;
+                cosinus = 0;
+            }
+            else {
+                sinus = sin((double)foeHeading / 360 * 2 * M_PI);
+                cosinus = cos((double)foeHeading / 360 * 2 * M_PI);
+            }
+            foeDrone[0] = -15 * sinus;
+            foeDrone[1] = -15 * cosinus;
+            foeDrone[2] = 10.0;
+            speedApproach(friendlyDrone, foeDrone, foeHeading, true);
+            break;
         }
+    }
         break;
     }
 }
