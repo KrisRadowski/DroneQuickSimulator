@@ -6,13 +6,17 @@
 typedef std::vector <double> double_vector_t;
 typedef std::vector <std::vector<double>> vector_vector_t;
 
-int testMenu() {
+int testMenu(int algorithm) {
     int select;
     std::cout << "Co przetestować?\n"
         << "1) Poprawność działania przy przeszkodzie poruszającej się\n"
         << "2) Złożoność obliczeniową\n"
-        << "3) Pokazać wykresy\n"
-        << "Wybór: ";
+        << "3) Pokazać wykresy" << endl;
+    if (algorithm == 1) {
+        std::cout << "4) czy bedzie pingpong?\n"
+            <<"5) rój"<< endl;
+    };
+    std::cout<< "Wybór: ";
     std::cin >> select;
     return select;
 }
@@ -25,6 +29,93 @@ int algorithmMenu() {
         << "Wybór: ";
     std::cin >> select;
     return select;
+}
+int makeCage(vector_vector_t& obstacles) {
+    for (int i = 0;i < 5;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -1;
+        obstacle[1] = -2;
+        obstacle[2] = 8 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 5;i < 10;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = 1;
+        obstacle[1] = -2;
+        obstacle[2] = 3 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 10;i < 15;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = 2;
+        obstacle[1] = -1;
+        obstacle[2] = -2 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 15;i < 20;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = 2;
+        obstacle[1] = 1;
+        obstacle[2] = -7 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 20;i < 25;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = 1;
+        obstacle[1] = 2;
+        obstacle[2] = -12 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 25;i < 30;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -1;
+        obstacle[1] = 2;
+        obstacle[2] = -17 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 30;i < 35;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -2;
+        obstacle[1] = 1;
+        obstacle[2] = -22 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 35;i < 40;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -2;
+        obstacle[1] = -1;
+        obstacle[2] = -27 + i;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 40;i < 42;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -1+((i-40)*2);
+        obstacle[1] = 1;
+        obstacle[2] = 7;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 42;i < 44;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -1 + ((i - 42) * 2);
+        obstacle[1] = -1;
+        obstacle[2] = 7;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 44;i < 46;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -1 + ((i - 44) * 2);
+        obstacle[1] = 1;
+        obstacle[2] = 13;
+        obstacles[i] = obstacle;
+    }
+    for (int i = 46;i < 48;i++) {
+        double_vector_t obstacle(3);
+        obstacle[0] = -1 + ((i - 46) * 2);
+        obstacle[1] = -1;
+        obstacle[2] = 13;
+        obstacles[i] = obstacle;
+    }
+    return 0;
 }
 int main()
 {
@@ -41,8 +132,8 @@ int main()
     case 1: {
         int test = 0;
         do {
-            test = testMenu();
-        } while (test != 1 && test != 2 && test!=3);
+            test = testMenu(algorithm);
+        } while (test != 1 && test != 2 && test!=3 && test!=4);
         switch (test) {
         case 1:
             for (int heading = 20;heading <= 340;heading++) {
@@ -86,10 +177,10 @@ int main()
                     obstacles[i]=obstacle;
                 }
                 cout << amount << ": ";
-                potentialField(friendlyDrone, obstacles);
+                potentialField(friendlyDrone, obstacles,false);
             }
             break;
-        case 3:
+        case 3: {
             int foeHeading = 0;
             do {
                 cout << "Podaj kąt pod którym ma lecieć wrogi dron: ";
@@ -118,6 +209,15 @@ int main()
             foeDrone[1] = -15 * cosinus;
             foeDrone[2] = 10.0;
             potentialField(friendlyDrone, foeDrone, foeHeading, true);
+        }
+            break;
+        case 4:
+            friendlyDrone[0] = 0;
+            friendlyDrone[1] = 0;
+            friendlyDrone[2] = 10.0;
+            vector_vector_t obstacles(48);
+            makeCage(obstacles);
+            potentialField(friendlyDrone, obstacles, true);
             break;
         }
     }
@@ -125,7 +225,7 @@ int main()
     case 2: {
         int test = 0;
         do {
-            test = testMenu();
+            test = testMenu(algorithm);
         } while (test != 1 && test != 2 && test != 3);
         switch (test) {
         case 1:
@@ -203,16 +303,13 @@ int main()
             foeDrone[2] = 10.0;
             monteCarlo(friendlyDrone, foeDrone, foeHeading, true);
             break;
-        case 4:
-
-            break;
         }
     }
         break;
     case 3: {
         int test = 0;
         do {
-            test = testMenu();
+            test = testMenu(algorithm);
         } while (test != 1 && test != 2 && test != 3);
         switch (test) {
         case 1:

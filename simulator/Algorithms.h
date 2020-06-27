@@ -25,7 +25,9 @@ bool onCollisionCourse(vector<double>& point1, vector<double>& point2, double h1
 int computeCollisionPoint(vector<double>& drone1, vector<double>& drone2, double h1, double h2, vector<double>& collisionPoint);
 int step(vector<double>& drone, double speed, double heading);
 int step(vector<double>& drone, double speed, vector<double>& forcesVector);
+int pingForObstacles(vector<double>& drone, vector<double>& obstacle);
 
+bool obstacleForward = false, obstacleBehind = false, obstacleOnLeft = false, obstacleOnRight = false, obstacleBelow = false, obstacleAbove = false;
 int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHeading, bool saveRoute) {
 	double_vector_t target, attractiveForce(3), repulsiveForce(3), distanceToTargetVector, distanceToFoeVector;
 	vector<double_vector_t> history(3);
@@ -83,7 +85,7 @@ int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHea
 	return 0;
 };
 
-int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
+int potentialField(vector<double>& drone, vector<vector<double>>& obstacles,bool zAxis) {
 	int algorithmSteps;
 	vector<double_vector_t> history(3);
 	history[0] = drone;
@@ -103,13 +105,25 @@ int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
 		attractiveForce[2] = (epsilon * (1 / pow(distanceToTarget, 2)) * distanceToTargetVector[2]);
 		algorithmSteps += 5;
 		for (vector<double> obstacle : obstacles) {
-			double distanceToObstacle = computeDistance(drone, obstacle);
-			if (distanceToObstacle <= 2) {
-				double_vector_t distanceToObstacleVector = computeVector(drone, obstacle);
+			pingForObstacles(drone, obstacle);
+			double_vector_t ghost(3);
+			if (obstacleOnLeft || obstacleOnRight) {
+				ghost[1] = drone[1];
+			} else ghost[1] = obstacle[1];
+			if (obstacleForward || obstacleBehind) {
+				ghost[0] = drone[0];
+			} else ghost[0] = obstacle[0];
+			if (zAxis&&(obstacleAbove || obstacleBelow)) {
+				ghost[2] = drone[2];
+			}
+			else ghost[2] = obstacle[2];
+			if(obstacleOnLeft || obstacleOnRight|| obstacleForward || obstacleBehind|| obstacleAbove || obstacleBelow){
+				double distanceToObstacle = computeDistance(drone, ghost);
+				double_vector_t distanceToObstacleVector = computeVector(drone, ghost);
 				repulsiveForce[0] += (mi * (1 / pow(distanceToObstacle, 2) * distanceToObstacleVector[0]));
 				repulsiveForce[1] += (mi * (1 / pow(distanceToObstacle, 2) * distanceToObstacleVector[1]));
 				repulsiveForce[2] += (mi * (1 / pow(distanceToObstacle, 2) * distanceToObstacleVector[2]));
-				algorithmSteps += 4;
+				algorithmSteps += 5;
 			} else {
 				repulsiveForce[0] += 0;
 				repulsiveForce[1] += 0;
@@ -126,9 +140,11 @@ int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
 			if (history[0][1] <= history[2][1]
 				) {
 				bool goRight = true;
-				for (auto obstacle : obstacles)
-					if (abs(obstacle[0] - drone[0]) < 1.25&&computeDistance(drone,obstacle)<2)
+				for (auto obstacle : obstacles) {
+					pingForObstacles(drone, obstacle);
+					if(obstacleOnRight)
 						goRight = false;
+				}
 				if (goRight) 
 					forcesVector[0] += 1;
 				else 
@@ -136,10 +152,17 @@ int potentialField(vector<double>& drone, vector<vector<double>>& obstacles) {
 			}
 		}
 		step(drone, 5.0, forcesVector);
+		cout << drone[0] << "\t" << drone[1] << "\t" << drone[2] << endl;
 		if (history[1].size() != 0)
 			history[2] = history[1];
 		history[1] = history[0];
 		history[0] = drone;
+		int obstacleNr = 1;
+		for (vector<double> obstacle : obstacles) {
+			if (computeDistance(drone,obstacle)<1)
+				cout << "!: bumped into obstacle #" << obstacleNr << endl;
+			obstacleNr++;
+		}
 	}
 	cout << algorithmSteps << endl;
 	return 0;
@@ -536,15 +559,9 @@ int step(vector<double>& drone, double speed, vector<double>& forcesVector) {
 	double maxV;
 	if (abs(forcesVector[0]) >= abs(forcesVector[1]) && abs(forcesVector[0]) >= abs(forcesVector[2])) {
 		maxV = abs(forcesVector[0]);
-		/*if (forcesVector[0] >= 0)
-			cout << "-> ";
-		else cout << "<- ";*/
 	}
 	else if (abs(forcesVector[1]) >= abs(forcesVector[0]) && abs(forcesVector[1]) >= abs(forcesVector[2])) {
 		maxV = abs(forcesVector[1]);
-		/*if (forcesVector[1] >= 0)
-			cout << "^ ";
-		else cout << "v ";*/
 	}
 	else if (abs(forcesVector[2]) >= abs(forcesVector[0]) && abs(forcesVector[2]) >= abs(forcesVector[1]))
 		maxV = abs(forcesVector[2]);
@@ -655,5 +672,39 @@ int computeCollisionPoint(vector<double>& drone1, vector<double>& drone2, double
 		collisionPoint[0] = x;
 	else collisionPoint[0] = drone1[0];
 	collisionPoint[1] = y2;
+	return 0;
+}
+
+int pingForObstacles(vector<double>& drone, vector<double>& obstacle) {
+	obstacleForward = false;
+	obstacleBehind = false;
+	obstacleOnLeft = false;
+	obstacleOnRight = false;
+	obstacleAbove = false;
+	obstacleBelow = false;
+	if (abs(obstacle[0] - drone[0]) <= 2) {
+		if (abs(obstacle[1] - drone[1]) <= abs(obstacle[0] - drone[0])&&
+			abs(obstacle[2] - drone[2]) <= abs(obstacle[0] - drone[0])) {
+			if (obstacle[0] >= drone[0])
+				obstacleOnRight = true;
+			else obstacleOnLeft = true;
+		}
+	}
+	if (abs(obstacle[1] - drone[1]) <= 2) {
+		if (abs(obstacle[0] - drone[0]) <= abs(obstacle[1] - drone[1])&&
+			abs(obstacle[2] - drone[2]) <= abs(obstacle[1] - drone[1])) {
+			if (obstacle[1] >= drone[1])
+				obstacleForward = true;
+			else obstacleBehind = true;
+		}
+	}
+	if (abs(obstacle[2] - drone[2]) <= 2) {
+		if (abs(obstacle[0] - drone[0]) <= abs(obstacle[2] - drone[2]) &&
+			abs(obstacle[1] - drone[1]) <= abs(obstacle[2] - drone[2])) {
+			if (obstacle[2] >= drone[2])
+				obstacleAbove = true;
+			else obstacleBelow = true;
+		}
+	}
 	return 0;
 }
