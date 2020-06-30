@@ -36,84 +36,160 @@ int makeCage(vector_vector_t& obstacles) {
         obstacle[0] = -1;
         obstacle[1] = -2;
         obstacle[2] = 8 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 5;i < 10;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = 1;
         obstacle[1] = -2;
         obstacle[2] = 3 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 10;i < 15;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = 2;
         obstacle[1] = -1;
         obstacle[2] = -2 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 15;i < 20;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = 2;
         obstacle[1] = 1;
         obstacle[2] = -7 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 20;i < 25;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = 1;
         obstacle[1] = 2;
         obstacle[2] = -12 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 25;i < 30;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -1;
         obstacle[1] = 2;
         obstacle[2] = -17 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 30;i < 35;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -2;
         obstacle[1] = 1;
         obstacle[2] = -22 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 35;i < 40;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -2;
         obstacle[1] = -1;
         obstacle[2] = -27 + i;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 40;i < 42;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -1+((i-40)*2);
         obstacle[1] = 1;
         obstacle[2] = 7;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 42;i < 44;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -1 + ((i - 42) * 2);
         obstacle[1] = -1;
         obstacle[2] = 7;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 44;i < 46;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -1 + ((i - 44) * 2);
         obstacle[1] = 1;
         obstacle[2] = 13;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
     }
     for (int i = 46;i < 48;i++) {
         double_vector_t obstacle(3);
         obstacle[0] = -1 + ((i - 46) * 2);
         obstacle[1] = -1;
         obstacle[2] = 13;
-        obstacles[i] = obstacle;
+        obstacles.push_back(obstacle);
+    }
+    return 0;
+}
+int makeBorders(vector_vector_t& field) {
+    for (int i = 0; i <= 51;i++) {
+        double_vector_t brick(3);
+        brick[0] = -25.5;
+        brick[1] = -25.5 + i;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 51;i++) {
+        double_vector_t brick(3);
+        brick[0] = -25.5 + i;
+        brick[1] = -25.5;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 51;i++) {
+        double_vector_t brick(3);
+        brick[0] = -25.5 + i;
+        brick[1] = 25.5;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 51;i++) {
+        double_vector_t brick(3);
+        brick[0] = 25.5;
+        brick[1] = -25.5 + i;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    return 0;
+}
+int makeObstacles(vector_vector_t& field) {
+    for (int i = 0; i <= 39;i++) {
+        double_vector_t brick(3);
+        brick[0] = -24.5+i;
+        brick[1] = -14.5;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 7;i++) {
+        double_vector_t brick(3);
+        brick[0] = 14.5;
+        brick[1] = -13.5 + i;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 39;i++) {
+        double_vector_t brick(3);
+        brick[0] = -24.5 + i;
+        brick[1] = -5.5;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 39;i++) {
+        double_vector_t brick(3);
+        brick[0] = -14.5 + i;
+        brick[1] = 5.5;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 7;i++) {
+        double_vector_t brick(3);
+        brick[0] = -14.5;
+        brick[1] = 6.5 + i;
+        brick[2] = 10;
+        field.push_back(brick);
+    }
+    for (int i = 0; i <= 39;i++) {
+        double_vector_t brick(3);
+        brick[0] = -14.5 + i;
+        brick[1] = 14.5;
+        brick[2] = 10;
+        field.push_back(brick);
     }
     return 0;
 }
@@ -133,7 +209,7 @@ int main()
         int test = 0;
         do {
             test = testMenu(algorithm);
-        } while (test != 1 && test != 2 && test!=3 && test!=4);
+        } while (test != 1 && test != 2 && test!=3 && test!=4 && test!=5);
         switch (test) {
         case 1:
             for (int heading = 20;heading <= 340;heading++) {
@@ -211,15 +287,38 @@ int main()
             potentialField(friendlyDrone, foeDrone, foeHeading, true);
         }
             break;
-        case 4:
+        case 4: {
             friendlyDrone[0] = 0;
             friendlyDrone[1] = 0;
             friendlyDrone[2] = 10.0;
-            vector_vector_t obstacles(48);
+            vector_vector_t obstacles;
             makeCage(obstacles);
             potentialField(friendlyDrone, obstacles, true);
+        }
+            break;
+        case 5: {
+            vector_vector_t drones;
+            double_vector_t drone1(3), drone2(3), drone3(3);
+            drone1[0] = -22;
+            drone1[1] = -20;
+            drone1[2] = 10;
+            drone2[0] = -24;
+            drone2[1] = -18;
+            drone2[2] = 10;
+            drone3[0] = -24;
+            drone3[1] = -22;
+            drone3[2] = 10;
+            drones.push_back(drone1);
+            drones.push_back(drone2);
+            drones.push_back(drone3);
+            vector_vector_t field;
+            makeBorders(field);
+            makeObstacles(field);
+            potentialField(drones, field, false);
+        }
             break;
         }
+        
     }
         break;
     case 2: {
