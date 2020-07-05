@@ -30,7 +30,7 @@ double pingForObstacles(vector<double>& drone, vector<double>& obstacle);
 int safeMoving(vector<double>& drone, vector<vector<double>>& obstacles, vector<double>& forcesVector);
 
 
-bool obstacleForward = false, obstacleBehind = false, obstacleOnLeft = false, obstacleOnRight = false, obstacleBelow = false, obstacleAbove = false, safeMode = false;
+bool obstacleForward = false, obstacleBehind = false, obstacleOnLeft = false, obstacleOnRight = false, obstacleBelow = false, obstacleAbove = false, safeMode = false, forwardBlocked = false, rightBlocked=false, leftBlocked=false;
 int potentialField(vector<double>& drone1, vector<double>& drone2, double foeHeading, bool saveRoute) {
 	double_vector_t target, attractiveForce(3), repulsiveForce(3), distanceToTargetVector, distanceToFoeVector;
 	vector<double_vector_t> history(3);
@@ -237,8 +237,8 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 	}
 	output << endl;
 	double_vector_t target;
-	target.push_back(22.5);
-	target.push_back(15.0);
+	target.push_back(0);
+	target.push_back(25);
 	target.push_back(10.0);
 	const double epsilon = 1;
 	const double mi = -1;
@@ -297,75 +297,42 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 			forcesVector[0] = attractiveForce[0] + repulsiveForce[0];
 			forcesVector[1] = attractiveForce[1] + repulsiveForce[1];
 			forcesVector[2] = attractiveForce[2] + repulsiveForce[2];
-			if (history.size() >= 5) {
-				if (computeDistance(drone,history[0][i])<0.2) {
-					bool rightClosed = false, leftClosed = false;
-					for (auto obstacle : obstacles) {
-						pingForObstacles(drone, obstacle);
-						if (obstacleOnRight) {
-							rightClosed = true;
-							if (obstacleOnLeft)
-								leftClosed = true;
-						}
-						else if (obstacleOnLeft) {
-							leftClosed = true;
-						}
-					}
-					if (leftClosed && rightClosed) {
-						forcesVector[0] = 0;
-						forcesVector[1] = -1;
-						forcesVector[2] = 0;
-					}
-					else if (leftClosed) {
-						forcesVector[0] = 1;
-						forcesVector[1] = -1;
-						forcesVector[2] = 0;
-					}
-					else if (rightClosed) {
-						forcesVector[0] = -1;
-						forcesVector[1] = -1;
-						forcesVector[2] = 0;
-					}
-				}
-			}
-			/*if (history.size() == 25) {
-				if (computeDistance(drone, history[0][i]) < 0.2) {
-					//safeMoving(drone, obstacles, forcesVector);
+			if (history.size() == 50) {
+				if (computeDistance(drone, history[0][i]) < 0.4||rightBlocked||leftBlocked) {
+					forwardBlocked = false;
 					for (auto obstacle : obstacles) {
 						pingForObstacles(drone, obstacle);
 						if (obstacleForward)
-							evade = true; 
-						if(evade){
-							/*if (obstacleOnRight)
-								cantGoRight = true;
-							if (obstacleOnLeft)
-								cantGoLeft = true;
-							if (obstacleBehind)
-								cantGoBack = true
+							forwardBlocked = true;
+						if (obstacleOnRight)
+							rightBlocked = true;
+						if (obstacleOnLeft)
+							leftBlocked = true;
+					}
+					if (forwardBlocked) {
+						if (rightBlocked) {
+							forcesVector[0] = -1;
+							forcesVector[1] = 0;
+							forcesVector[2] = 0;
+						} else if (!leftBlocked){
+							forcesVector[0] = 1;
+							forcesVector[1] = 0;
+							forcesVector[2] = 0;
+						} else {
+							forcesVector[0] = 0;
+							forcesVector[1] = -1;
+							forcesVector[2] = 0;
 						}
 					}
-					if (evade){
-						/*if (!cantGoRight) {
-							forcesVector[0] = 1;
-							forcesVector[2] = 0;
-						}
-						else if (!cantGoLeft) {
-							forcesVector[0] = -1;
-							forcesVector[2] = 0;
-						}
-						else {
-							forcesVector[0] = 0;
-							forcesVector[2] = 0;
-						}
-						if (!cantGoBack) {
-							forcesVector[1] = -1;
-						}
-						else {
-							forcesVector[1] = 0;
-						}
+					else {
+						forcesVector[0] = 0;
+						forcesVector[1] = 1;
+						forcesVector[2] = 0;
+						rightBlocked = false;
+						leftBlocked = false;
 					}
 				}
-			}*/
+			}
 			if(!arrivedDrones[i])
 			step(drone, 5.0, forcesVector);
 			output << drone[0] << ";" << drone[1] << ";" << drone[2] << ";";
@@ -376,7 +343,7 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 		}
 		output << endl;
 		history.push_back(record);
-		if (history.size() > 25)
+		if (history.size() > 50)
 			history.erase(history.begin());
 		int dronesArrived = 0,d = 0;
 		for (auto drone : drones) {
@@ -909,18 +876,18 @@ double pingForObstacles(vector<double>& drone, vector<double>& obstacle) {
 	obstacleBelow = false;
 	double distance = computeDistance(drone, obstacle);
 	if (distance <= 2) {
-		if(abs(obstacle[1] - drone[1])*sqrt(2)<=distance&&
-			abs(obstacle[2] - drone[2]) * sqrt(2) <= distance)
+		if(abs(obstacle[1] - drone[1])*sqrt(3)<=distance&&
+			abs(obstacle[2] - drone[2]) * sqrt(3) <= distance)
 			if (obstacle[0] >= drone[0])
 				obstacleOnRight = true;
 			else obstacleOnLeft = true;
-		if (abs(obstacle[0] - drone[0]) * sqrt(2) <= distance &&
-			abs(obstacle[2] - drone[2]) * sqrt(2) <= distance)
+		if (abs(obstacle[0] - drone[0]) * sqrt(3) <= distance &&
+			abs(obstacle[2] - drone[2]) * sqrt(3) <= distance)
 			if (obstacle[1] >= drone[1])
 				obstacleForward = true;
 			else obstacleBehind = true;
-		if (abs(obstacle[0] - drone[0]) * sqrt(2) <= distance &&
-			abs(obstacle[1] - drone[1]) * sqrt(2) <= distance)
+		if (abs(obstacle[0] - drone[0]) * sqrt(3) <= distance &&
+			abs(obstacle[1] - drone[1]) * sqrt(3) <= distance)
 			if (obstacle[2] >= drone[2])
 				obstacleAbove = true;
 			else obstacleBelow = true;

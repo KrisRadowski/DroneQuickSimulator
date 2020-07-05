@@ -118,28 +118,28 @@ int makeCage(vector_vector_t& obstacles) {
     return 0;
 }
 int makeBorders(vector_vector_t& field) {
-    for (int i = 0; i <= 51;i++) {
+    for (float i = 0; i <= 51;i+=0.01) {
         double_vector_t brick(3);
         brick[0] = -25.5;
         brick[1] = -25.5 + i;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 51;i++) {
+    for (float i = 0; i <= 51;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -25.5 + i;
         brick[1] = -25.5;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 51;i++) {
+    for (float i = 0; i <= 51;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -25.5 + i;
         brick[1] = 25.5;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 51;i++) {
+    for (float i = 0; i <= 51;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = 25.5;
         brick[1] = -25.5 + i;
@@ -149,42 +149,42 @@ int makeBorders(vector_vector_t& field) {
     return 0;
 }
 int makeObstacles(vector_vector_t& field) {
-    for (int i = 0; i <= 39;i++) {
+    for (float i = 0; i <= 39;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -24.5+i;
         brick[1] = -14.5;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 7;i++) {
+    for (float i = 0; i <= 7;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = 14.5;
         brick[1] = -13.5 + i;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 39;i++) {
+    for (float i = 0; i <= 39;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -24.5 + i;
         brick[1] = -5.5;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 39;i++) {
+    for (float i = 0; i <= 39;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -14.5 + i;
         brick[1] = 5.5;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 7;i++) {
+    for (float i = 0; i <= 7;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -14.5;
         brick[1] = 6.5 + i;
         brick[2] = 10;
         field.push_back(brick);
     }
-    for (int i = 0; i <= 39;i++) {
+    for (float i = 0; i <= 39;i += 0.01) {
         double_vector_t brick(3);
         brick[0] = -14.5 + i;
         brick[1] = 14.5;
@@ -299,21 +299,26 @@ int main()
         case 5: {
             vector_vector_t drones;
             double_vector_t drone1(3), drone2(3), drone3(3);
-            drone1[0] = -22;
+            drone1[0] = 0;
             drone1[1] = -20;
             drone1[2] = 10;
-            drone2[0] = -24;
-            drone2[1] = -18;
+            drone2[0] = -2;
+            drone2[1] = -22;
             drone2[2] = 10;
-            drone3[0] = -24;
+            drone3[0] = 2;
             drone3[1] = -22;
             drone3[2] = 10;
             drones.push_back(drone1);
             drones.push_back(drone2);
             drones.push_back(drone3);
             vector_vector_t field;
-            makeBorders(field);
-            makeObstacles(field);
+            double_vector_t obstacle(3);
+            obstacle[0] = 0;
+            obstacle[1] = 0;
+            obstacle[2] = 10;
+            field.push_back(obstacle);
+            //makeBorders(field);
+            //makeObstacles(field);
             potentialField(drones, field, false);
         }
             break;
