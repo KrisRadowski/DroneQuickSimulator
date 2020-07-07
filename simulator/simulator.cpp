@@ -299,13 +299,13 @@ int main()
         case 5: {
             vector_vector_t drones;
             double_vector_t drone1(3), drone2(3), drone3(3);
-            drone1[0] = 0;
+            drone1[0] = -21;
             drone1[1] = -20;
             drone1[2] = 10;
-            drone2[0] = -2;
-            drone2[1] = -22;
+            drone2[0] = -23;
+            drone2[1] = -18;
             drone2[2] = 10;
-            drone3[0] = 2;
+            drone3[0] = -23;
             drone3[1] = -22;
             drone3[2] = 10;
             drones.push_back(drone1);

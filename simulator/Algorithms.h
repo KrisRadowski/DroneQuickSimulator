@@ -237,8 +237,8 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 	}
 	output << endl;
 	double_vector_t target;
-	target.push_back(0);
-	target.push_back(25);
+	target.push_back(20);
+	target.push_back(23);
 	target.push_back(10.0);
 	const double epsilon = 1;
 	const double mi = -1;
@@ -278,19 +278,84 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 					repulsiveForce[2] += 0;
 				}
 			}
-			for (vector<double> obstacle : obstacles) {
-				double_vector_t ghost = makeGhost(drone, obstacle);
-				if (obstacleOnLeft || obstacleOnRight || obstacleForward || obstacleBehind || obstacleAbove || obstacleBelow) {
-					double distanceToGhost = computeDistance(drone, ghost);
+			vector<vector<double>> ghosts;
+			if (drone[0] < -23) {
+				double_vector_t ghost(3);
+				ghost[0] = -25;
+				ghost[1] = drone[1];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[0] > 15&&drone[0]<17&&drone[1]>(-15-sqrt(2))&& drone[1] < (-5 + sqrt(2))) {
+				double_vector_t ghost(3);
+				ghost[0] = 15;
+				ghost[1] = drone[1];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[0] > 23) {
+				double_vector_t ghost(3);
+				ghost[0] = 25;
+				ghost[1] = drone[1];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[0] < -15 && drone[0]>-17 && drone[1]>(5 - sqrt(2)) && drone[1] < (15 + sqrt(2))) {
+				double_vector_t ghost(3);
+				ghost[0] = -15;
+				ghost[1] = drone[1];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[1] < -23) {
+				double_vector_t ghost(3);
+				ghost[1] = -25;
+				ghost[0] = drone[0];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[1] < -3 && drone[1] > -5 && drone[0] < (15 + sqrt(2))) {
+				double_vector_t ghost(3);
+				ghost[1] = -5;
+				ghost[0] = drone[0];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[1] < 17 && drone[1] > 15 && drone[0] > (-15 - sqrt(2))) {
+				double_vector_t ghost(3);
+				ghost[1] = 15;
+				ghost[0] = drone[0];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[1] > 23) {
+				double_vector_t ghost(3);
+				ghost[1] = 25;
+				ghost[0] = drone[0];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[1] > -17 && drone[1] < -15 && drone[0] < (15 + sqrt(2))) {
+				double_vector_t ghost(3);
+				ghost[1] = -15;
+				ghost[0] = drone[0];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			if (drone[1] > 3 && drone[1] < 5 && drone[0] > (-15 - sqrt(2))) {
+				double_vector_t ghost(3);
+				ghost[1] = 5;
+				ghost[0] = drone[0];
+				ghost[2] = drone[2];
+				ghosts.push_back(ghost);
+			}
+			for (vector<double> ghost : ghosts) {
+				double distanceToGhost = computeDistance(drone, ghost);
+				if (distanceToGhost <= 2) {
 					double_vector_t distanceToGhostVector = computeVector(drone, ghost);
 					repulsiveForce[0] += (mi * (1 / pow(distanceToGhost, 2) * distanceToGhostVector[0]));
 					repulsiveForce[1] += (mi * (1 / pow(distanceToGhost, 2) * distanceToGhostVector[1]));
 					repulsiveForce[2] += (mi * (1 / pow(distanceToGhost, 2) * distanceToGhostVector[2]));
-				}
-				else {
-					repulsiveForce[0] += 0;
-					repulsiveForce[1] += 0;
-					repulsiveForce[2] += 0;
 				}
 			}
 			double_vector_t forcesVector(3);
@@ -298,7 +363,7 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 			forcesVector[1] = attractiveForce[1] + repulsiveForce[1];
 			forcesVector[2] = attractiveForce[2] + repulsiveForce[2];
 			if (history.size() == 50) {
-				if (computeDistance(drone, history[0][i]) < 0.4||rightBlocked||leftBlocked) {
+				/*if (computeDistance(drone, history[0][i]) < 0.4||rightBlocked||leftBlocked) {
 					forwardBlocked = false;
 					for (auto obstacle : obstacles) {
 						pingForObstacles(drone, obstacle);
@@ -331,7 +396,7 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 						rightBlocked = false;
 						leftBlocked = false;
 					}
-				}
+				}*/
 			}
 			if(!arrivedDrones[i])
 			step(drone, 5.0, forcesVector);
@@ -348,13 +413,9 @@ int potentialField(vector<vector<double>>& drones, vector<vector<double>>& obsta
 		int dronesArrived = 0,d = 0;
 		for (auto drone : drones) {
 			if (computeDistance(drone, target) <= 0.2) {
-				dronesArrived++;
-				arrivedDrones[d] = true;
+				wereArrived = true;
 			}
-			d++;
-		}
-		if (dronesArrived==drones.size())
-			wereArrived = true;
+		}		
 	}
 
 	return 0;
